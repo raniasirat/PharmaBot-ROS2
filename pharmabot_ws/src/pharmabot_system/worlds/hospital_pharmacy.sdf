@@ -1,0 +1,549 @@
+<?xml version="1.0" ?>
+<!--
+  PharmaBot — Hospital Pharmacy World (Gazebo Sim / SDF 1.7)
+  ============================================================
+  Layout (top view, 1 unit = 1 m):
+
+        -10       -5        0         5        10
+   10   +----+----+---------+---------+----+----+
+        | CONSULTATION      |      REANIMATION  |
+    5   |         |  CORR   |   CORR  |         |
+        +----+----+----+----+----+----+----+----+
+        |    CORR      | PHARMACY |    CORR     |
+    0   +----+----+----+----+----+----+----+----+
+        |         |  CORR   |   CORR  |         |
+   -5   |  SURGERY          |        EMERGENCY  |
+        +----+----+---------+---------+----+----+
+  -10
+
+  Service nav goals (pharmacy_service_goals.json):
+    Pharmacy     (0.0,  0.0)   green cross — robot home
+    Reanimation  (2.2,  1.8)   red beacon
+    Emergency    (0.8, -1.6)   orange beacon
+    Consultation (-1.4, 1.0)   blue beacon
+    Surgery      (-2.1,-1.5)   teal beacon
+-->
+<sdf version="1.7">
+  <world name="hospital_pharmacy">
+
+    <!-- ===== PHYSICS & PLUGINS ===== -->
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+    <plugin filename="gz-sim-physics-system"           name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system"     name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-sensors-system"           name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+
+    <!-- ===== LIGHTING ===== -->
+    <scene>
+      <ambient>0.5 0.5 0.52 1</ambient>
+      <background>0.82 0.88 0.95 1</background>
+    </scene>
+
+    <light name="sun" type="directional">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 20 0 -0.4 0.3</pose>
+      <diffuse>0.95 0.93 0.88 1</diffuse>
+      <specular>0.25 0.25 0.25 1</specular>
+      <direction>-0.4 0.2 -0.9</direction>
+    </light>
+
+    <light name="fill_light" type="point">
+      <pose>0 0 4.5 0 0 0</pose>
+      <diffuse>0.65 0.70 0.75 1</diffuse>
+      <attenuation><range>30</range><linear>0.04</linear></attenuation>
+    </light>
+
+    <!-- ===== GROUND ===== -->
+    <model name="ground">
+      <static>true</static>
+      <link name="link">
+        <collision name="col">
+          <geometry><plane><normal>0 0 1</normal><size>30 30</size></plane></geometry>
+        </collision>
+        <visual name="vis">
+          <geometry><plane><normal>0 0 1</normal><size>30 30</size></plane></geometry>
+          <material><ambient>0.80 0.80 0.80 1</ambient><diffuse>0.80 0.80 0.80 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ===== DEPARTMENT FLOOR OVERLAYS (z=0.005) ===== -->
+
+    <!-- PHARMACY — light green -->
+    <model name="floor_pharmacy"><static>true</static><pose>0 0 0.005 0 0 0</pose>
+      <link name="link"><visual name="vis">
+        <geometry><box><size>4.8 4.8 0.01</size></box></geometry>
+        <material><ambient>0.74 0.94 0.74 1</ambient><diffuse>0.74 0.94 0.74 1</diffuse></material>
+      </visual></link>
+    </model>
+
+    <!-- REANIMATION NE — warm red -->
+    <model name="floor_reanimation"><static>true</static><pose>6.0 6.0 0.005 0 0 0</pose>
+      <link name="link"><visual name="vis">
+        <geometry><box><size>8.0 8.0 0.01</size></box></geometry>
+        <material><ambient>0.96 0.78 0.78 1</ambient><diffuse>0.96 0.78 0.78 1</diffuse></material>
+      </visual></link>
+    </model>
+
+    <!-- EMERGENCY SE — warm orange -->
+    <model name="floor_emergency"><static>true</static><pose>6.0 -6.0 0.005 0 0 0</pose>
+      <link name="link"><visual name="vis">
+        <geometry><box><size>8.0 8.0 0.01</size></box></geometry>
+        <material><ambient>0.98 0.88 0.66 1</ambient><diffuse>0.98 0.88 0.66 1</diffuse></material>
+      </visual></link>
+    </model>
+
+    <!-- CONSULTATION NW — sky blue -->
+    <model name="floor_consultation"><static>true</static><pose>-6.0 6.0 0.005 0 0 0</pose>
+      <link name="link"><visual name="vis">
+        <geometry><box><size>8.0 8.0 0.01</size></box></geometry>
+        <material><ambient>0.72 0.86 0.97 1</ambient><diffuse>0.72 0.86 0.97 1</diffuse></material>
+      </visual></link>
+    </model>
+
+    <!-- SURGERY SW — mint green -->
+    <model name="floor_surgery"><static>true</static><pose>-6.0 -6.0 0.005 0 0 0</pose>
+      <link name="link"><visual name="vis">
+        <geometry><box><size>8.0 8.0 0.01</size></box></geometry>
+        <material><ambient>0.72 0.96 0.85 1</ambient><diffuse>0.72 0.96 0.85 1</diffuse></material>
+      </visual></link>
+    </model>
+
+    <!-- CORRIDORS — bright white -->
+    <model name="floor_corridor_h"><static>true</static><pose>0 0 0.006 0 0 0</pose>
+      <link name="link"><visual name="vis">
+        <geometry><box><size>22 2.4 0.01</size></box></geometry>
+        <material><ambient>0.97 0.97 0.97 1</ambient><diffuse>0.97 0.97 0.97 1</diffuse></material>
+      </visual></link>
+    </model>
+    <model name="floor_corridor_v"><static>true</static><pose>0 0 0.006 0 0 0</pose>
+      <link name="link"><visual name="vis">
+        <geometry><box><size>2.4 22 0.01</size></box></geometry>
+        <material><ambient>0.97 0.97 0.97 1</ambient><diffuse>0.97 0.97 0.97 1</diffuse></material>
+      </visual></link>
+    </model>
+
+    <!-- ===== OUTER WALLS (h=2.8 m, t=0.2 m) ===== -->
+    <model name="wall_N"><static>true</static><pose>0 10 1.4 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>20.4 0.2 2.8</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>20.4 0.2 2.8</size></box></geometry>
+          <material><ambient>0.93 0.93 0.93 1</ambient><diffuse>0.93 0.93 0.93 1</diffuse></material></visual>
+      </link></model>
+    <model name="wall_S"><static>true</static><pose>0 -10 1.4 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>20.4 0.2 2.8</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>20.4 0.2 2.8</size></box></geometry>
+          <material><ambient>0.93 0.93 0.93 1</ambient><diffuse>0.93 0.93 0.93 1</diffuse></material></visual>
+      </link></model>
+    <model name="wall_W"><static>true</static><pose>-10 0 1.4 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.2 20.4 2.8</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.2 20.4 2.8</size></box></geometry>
+          <material><ambient>0.93 0.93 0.93 1</ambient><diffuse>0.93 0.93 0.93 1</diffuse></material></visual>
+      </link></model>
+    <model name="wall_E"><static>true</static><pose>10 0 1.4 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.2 20.4 2.8</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.2 20.4 2.8</size></box></geometry>
+          <material><ambient>0.93 0.93 0.93 1</ambient><diffuse>0.93 0.93 0.93 1</diffuse></material></visual>
+      </link></model>
+
+    <!-- ===== INTERNAL DEPARTMENT WALLS WITH DOOR OPENINGS (1.4 m wide) ===== -->
+    <!--
+      Corridor axes: y=+1.2 (north side), y=-1.2 (south side), x=+1.2 (east), x=-1.2 (west)
+      Door openings centred in each wall segment to allow Nav2 to pass through.
+    -->
+
+    <!-- --- NE / Reanimation south wall (y=1.2) --- -->
+    <!-- Door opening: x=2.8 to 4.2.  Segments: x=1.2..2.8 and x=4.2..10 -->
+    <model name="w_NE_S_1"><static>true</static><pose>2.0 1.2 1.4 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>1.6 0.2 2.8</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>1.6 0.2 2.8</size></box></geometry>
+          <material><ambient>0.88 0.88 0.88 1</ambient><diffuse>0.88 0.88 0.88 1</diffuse></material></visual>
+      </link></model>
+    <model name="w_NE_S_2"><static>true</static><pose>7.1 1.2 1.4 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>5.8 0.2 2.8</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>5.8 0.2 2.8</size></box></geometry>
+          <material><ambient>0.88 0.88 0.88 1</ambient><diffuse>0.88 0.88 0.88 1</diffuse></material></visual>
+      </link></model>
+
+    <!-- NE west wall (x=1.2). Door opening: y=3.5 to 4.9 -->
+    <model name="w_NE_W_1"><static>true</static><pose>1.2 2.35 1.4 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.2 2.3 2.8</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.2 2.3 2.8</size></box></geometry>
+          <material><ambient>0.88 0.88 0.88 1</ambient><diffuse>0.88 0.88 0.88 1</diffuse></material></visual>
+      </link></model>
+    <model name="w_NE_W_2"><static>true</static><pose>1.2 7.45 1.4 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.2 5.1 2.8</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.2 5.1 2.8</size></box></geometry>
+          <material><ambient>0.88 0.88 0.88 1</ambient><diffuse>0.88 0.88 0.88 1</diffuse></material></visual>
+      </link></model>
+
+    <!-- --- SE / Emergency north wall (y=-1.2) --- -->
+    <model name="w_SE_N_1"><static>true</static><pose>2.0 -1.2 1.4 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>1.6 0.2 2.8</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>1.6 0.2 2.8</size></box></geometry>
+          <material><ambient>0.88 0.88 0.88 1</ambient><diffuse>0.88 0.88 0.88 1</diffuse></material></visual>
+      </link></model>
+    <model name="w_SE_N_2"><static>true</static><pose>7.1 -1.2 1.4 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>5.8 0.2 2.8</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>5.8 0.2 2.8</size></box></geometry>
+          <material><ambient>0.88 0.88 0.88 1</ambient><diffuse>0.88 0.88 0.88 1</diffuse></material></visual>
+      </link></model>
+
+    <!-- SE west wall (x=1.2) -->
+    <model name="w_SE_W_1"><static>true</static><pose>1.2 -2.35 1.4 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.2 2.3 2.8</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.2 2.3 2.8</size></box></geometry>
+          <material><ambient>0.88 0.88 0.88 1</ambient><diffuse>0.88 0.88 0.88 1</diffuse></material></visual>
+      </link></model>
+    <model name="w_SE_W_2"><static>true</static><pose>1.2 -7.45 1.4 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.2 5.1 2.8</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.2 5.1 2.8</size></box></geometry>
+          <material><ambient>0.88 0.88 0.88 1</ambient><diffuse>0.88 0.88 0.88 1</diffuse></material></visual>
+      </link></model>
+
+    <!-- --- NW / Consultation south wall (y=1.2) --- -->
+    <model name="w_NW_S_1"><static>true</static><pose>-2.0 1.2 1.4 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>1.6 0.2 2.8</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>1.6 0.2 2.8</size></box></geometry>
+          <material><ambient>0.88 0.88 0.88 1</ambient><diffuse>0.88 0.88 0.88 1</diffuse></material></visual>
+      </link></model>
+    <model name="w_NW_S_2"><static>true</static><pose>-7.1 1.2 1.4 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>5.8 0.2 2.8</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>5.8 0.2 2.8</size></box></geometry>
+          <material><ambient>0.88 0.88 0.88 1</ambient><diffuse>0.88 0.88 0.88 1</diffuse></material></visual>
+      </link></model>
+
+    <!-- NW east wall (x=-1.2) -->
+    <model name="w_NW_E_1"><static>true</static><pose>-1.2 2.35 1.4 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.2 2.3 2.8</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.2 2.3 2.8</size></box></geometry>
+          <material><ambient>0.88 0.88 0.88 1</ambient><diffuse>0.88 0.88 0.88 1</diffuse></material></visual>
+      </link></model>
+    <model name="w_NW_E_2"><static>true</static><pose>-1.2 7.45 1.4 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.2 5.1 2.8</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.2 5.1 2.8</size></box></geometry>
+          <material><ambient>0.88 0.88 0.88 1</ambient><diffuse>0.88 0.88 0.88 1</diffuse></material></visual>
+      </link></model>
+
+    <!-- --- SW / Surgery north wall (y=-1.2) --- -->
+    <model name="w_SW_N_1"><static>true</static><pose>-2.0 -1.2 1.4 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>1.6 0.2 2.8</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>1.6 0.2 2.8</size></box></geometry>
+          <material><ambient>0.88 0.88 0.88 1</ambient><diffuse>0.88 0.88 0.88 1</diffuse></material></visual>
+      </link></model>
+    <model name="w_SW_N_2"><static>true</static><pose>-7.1 -1.2 1.4 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>5.8 0.2 2.8</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>5.8 0.2 2.8</size></box></geometry>
+          <material><ambient>0.88 0.88 0.88 1</ambient><diffuse>0.88 0.88 0.88 1</diffuse></material></visual>
+      </link></model>
+
+    <!-- SW east wall (x=-1.2) -->
+    <model name="w_SW_E_1"><static>true</static><pose>-1.2 -2.35 1.4 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.2 2.3 2.8</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.2 2.3 2.8</size></box></geometry>
+          <material><ambient>0.88 0.88 0.88 1</ambient><diffuse>0.88 0.88 0.88 1</diffuse></material></visual>
+      </link></model>
+    <model name="w_SW_E_2"><static>true</static><pose>-1.2 -7.45 1.4 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.2 5.1 2.8</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.2 5.1 2.8</size></box></geometry>
+          <material><ambient>0.88 0.88 0.88 1</ambient><diffuse>0.88 0.88 0.88 1</diffuse></material></visual>
+      </link></model>
+
+    <!-- ===== INTERNAL ROOM PARTITIONS ===== -->
+    <!-- Each department has one internal partition dividing it into 2 sub-rooms -->
+    <model name="part_reanim"><static>true</static><pose>6.0 4.0 1.0 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>8.0 0.12 2.0</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>8.0 0.12 2.0</size></box></geometry>
+          <material><ambient>0.87 0.87 0.87 1</ambient><diffuse>0.87 0.87 0.87 1</diffuse></material></visual>
+      </link></model>
+
+    <model name="part_emerg"><static>true</static><pose>6.0 -4.0 1.0 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>8.0 0.12 2.0</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>8.0 0.12 2.0</size></box></geometry>
+          <material><ambient>0.87 0.87 0.87 1</ambient><diffuse>0.87 0.87 0.87 1</diffuse></material></visual>
+      </link></model>
+
+    <model name="part_consult"><static>true</static><pose>-6.0 4.0 1.0 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>8.0 0.12 2.0</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>8.0 0.12 2.0</size></box></geometry>
+          <material><ambient>0.87 0.87 0.87 1</ambient><diffuse>0.87 0.87 0.87 1</diffuse></material></visual>
+      </link></model>
+
+    <model name="part_surgery"><static>true</static><pose>-6.0 -4.0 1.0 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>8.0 0.12 2.0</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>8.0 0.12 2.0</size></box></geometry>
+          <material><ambient>0.87 0.87 0.87 1</ambient><diffuse>0.87 0.87 0.87 1</diffuse></material></visual>
+      </link></model>
+
+    <!-- ===== CEILING (semi-transparent) ===== -->
+    <model name="ceiling"><static>true</static><pose>0 0 2.8 0 0 0</pose>
+      <link name="link"><visual name="vis">
+        <geometry><box><size>20.4 20.4 0.05</size></box></geometry>
+        <material><ambient>0.97 0.97 0.97 0.25</ambient><diffuse>0.97 0.97 0.97 0.25</diffuse></material>
+      </visual></link>
+    </model>
+
+    <!-- ===== PHARMACY FURNITURE ===== -->
+    <!-- Dispensing counter -->
+    <model name="pharma_counter"><static>true</static><pose>0.0 1.4 0.45 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>3.2 0.5 0.9</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>3.2 0.5 0.9</size></box></geometry>
+          <material><ambient>0.82 0.94 0.84 1</ambient><diffuse>0.82 0.94 0.84 1</diffuse></material></visual>
+      </link></model>
+    <!-- 3 medicine shelves -->
+    <model name="shelf_ph_1"><static>true</static><pose>1.0 -1.7 1.0 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.35 1.2 2.0</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.35 1.2 2.0</size></box></geometry>
+          <material><ambient>0.74 0.88 0.76 1</ambient><diffuse>0.74 0.88 0.76 1</diffuse></material></visual>
+      </link></model>
+    <model name="shelf_ph_2"><static>true</static><pose>-0.1 -1.7 1.0 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.35 1.2 2.0</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.35 1.2 2.0</size></box></geometry>
+          <material><ambient>0.74 0.88 0.76 1</ambient><diffuse>0.74 0.88 0.76 1</diffuse></material></visual>
+      </link></model>
+    <model name="shelf_ph_3"><static>true</static><pose>-1.2 -1.7 1.0 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.35 1.2 2.0</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.35 1.2 2.0</size></box></geometry>
+          <material><ambient>0.74 0.88 0.76 1</ambient><diffuse>0.74 0.88 0.76 1</diffuse></material></visual>
+      </link></model>
+    <!-- Green cross floor marking -->
+    <model name="cross_h"><static>true</static><pose>0 0 0.012 0 0 0</pose>
+      <link name="link"><visual name="vis"><geometry><box><size>1.8 0.32 0.01</size></box></geometry>
+        <material><ambient>0.08 0.78 0.32 1</ambient><diffuse>0.08 0.78 0.32 1</diffuse></material></visual></link>
+    </model>
+    <model name="cross_v"><static>true</static><pose>0 0 0.013 0 0 0</pose>
+      <link name="link"><visual name="vis"><geometry><box><size>0.32 1.8 0.01</size></box></geometry>
+        <material><ambient>0.08 0.78 0.32 1</ambient><diffuse>0.08 0.78 0.32 1</diffuse></material></visual></link>
+    </model>
+
+    <!-- ===== REANIMATION FURNITURE ===== -->
+    <!-- 4 hospital beds — north room -->
+    <model name="bed_r1"><static>true</static><pose>3.5 7.5 0.35 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.85 1.95 0.7</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.85 1.95 0.7</size></box></geometry>
+          <material><ambient>0.96 0.96 0.96 1</ambient><diffuse>0.96 0.96 0.96 1</diffuse></material></visual>
+      </link></model>
+    <model name="bed_r2"><static>true</static><pose>5.2 7.5 0.35 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.85 1.95 0.7</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.85 1.95 0.7</size></box></geometry>
+          <material><ambient>0.96 0.96 0.96 1</ambient><diffuse>0.96 0.96 0.96 1</diffuse></material></visual>
+      </link></model>
+    <model name="bed_r3"><static>true</static><pose>7.2 7.5 0.35 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.85 1.95 0.7</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.85 1.95 0.7</size></box></geometry>
+          <material><ambient>0.96 0.96 0.96 1</ambient><diffuse>0.96 0.96 0.96 1</diffuse></material></visual>
+      </link></model>
+    <model name="bed_r4"><static>true</static><pose>9.0 7.5 0.35 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.85 1.95 0.7</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.85 1.95 0.7</size></box></geometry>
+          <material><ambient>0.96 0.96 0.96 1</ambient><diffuse>0.96 0.96 0.96 1</diffuse></material></visual>
+      </link></model>
+    <!-- 2 beds south room -->
+    <model name="bed_r5"><static>true</static><pose>4.5 2.5 0.35 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.85 1.95 0.7</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.85 1.95 0.7</size></box></geometry>
+          <material><ambient>0.96 0.96 0.96 1</ambient><diffuse>0.96 0.96 0.96 1</diffuse></material></visual>
+      </link></model>
+    <model name="bed_r6"><static>true</static><pose>6.5 2.5 0.35 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.85 1.95 0.7</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.85 1.95 0.7</size></box></geometry>
+          <material><ambient>0.96 0.96 0.96 1</ambient><diffuse>0.96 0.96 0.96 1</diffuse></material></visual>
+      </link></model>
+    <!-- Nurse desk reanimation (near nav goal 2.2,1.8) -->
+    <model name="desk_r"><static>true</static><pose>8.5 2.5 0.4 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>1.4 0.55 0.8</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>1.4 0.55 0.8</size></box></geometry>
+          <material><ambient>0.72 0.50 0.50 1</ambient><diffuse>0.72 0.50 0.50 1</diffuse></material></visual>
+      </link></model>
+    <!-- RED beacon cylinder at nav goal -->
+    <model name="beacon_reanimation"><static>true</static><pose>2.2 1.8 0.7 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><cylinder><radius>0.20</radius><length>1.4</length></cylinder></geometry></collision>
+        <visual name="vis"><geometry><cylinder><radius>0.20</radius><length>1.4</length></cylinder></geometry>
+          <material><ambient>0.92 0.08 0.12 1</ambient><diffuse>0.92 0.08 0.12 1</diffuse></material></visual>
+      </link></model>
+
+    <!-- ===== EMERGENCY FURNITURE ===== -->
+    <model name="bed_e1"><static>true</static><pose>3.5 -7.5 0.35 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.85 1.95 0.7</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.85 1.95 0.7</size></box></geometry>
+          <material><ambient>0.96 0.96 0.96 1</ambient><diffuse>0.96 0.96 0.96 1</diffuse></material></visual>
+      </link></model>
+    <model name="bed_e2"><static>true</static><pose>5.2 -7.5 0.35 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.85 1.95 0.7</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.85 1.95 0.7</size></box></geometry>
+          <material><ambient>0.96 0.96 0.96 1</ambient><diffuse>0.96 0.96 0.96 1</diffuse></material></visual>
+      </link></model>
+    <model name="bed_e3"><static>true</static><pose>7.2 -7.5 0.35 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.85 1.95 0.7</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.85 1.95 0.7</size></box></geometry>
+          <material><ambient>0.96 0.96 0.96 1</ambient><diffuse>0.96 0.96 0.96 1</diffuse></material></visual>
+      </link></model>
+    <model name="bed_e4"><static>true</static><pose>4.5 -2.5 0.35 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.85 1.95 0.7</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.85 1.95 0.7</size></box></geometry>
+          <material><ambient>0.96 0.96 0.96 1</ambient><diffuse>0.96 0.96 0.96 1</diffuse></material></visual>
+      </link></model>
+    <model name="desk_e"><static>true</static><pose>8.5 -2.5 0.4 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>1.4 0.55 0.8</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>1.4 0.55 0.8</size></box></geometry>
+          <material><ambient>0.80 0.64 0.44 1</ambient><diffuse>0.80 0.64 0.44 1</diffuse></material></visual>
+      </link></model>
+    <!-- ORANGE beacon at nav goal (0.8,-1.6) -->
+    <model name="beacon_emergency"><static>true</static><pose>0.8 -1.6 0.7 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><cylinder><radius>0.20</radius><length>1.4</length></cylinder></geometry></collision>
+        <visual name="vis"><geometry><cylinder><radius>0.20</radius><length>1.4</length></cylinder></geometry>
+          <material><ambient>0.95 0.52 0.04 1</ambient><diffuse>0.95 0.52 0.04 1</diffuse></material></visual>
+      </link></model>
+
+    <!-- ===== CONSULTATION FURNITURE ===== -->
+    <model name="desk_c1"><static>true</static><pose>-4.0 7.5 0.4 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>1.1 0.55 0.8</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>1.1 0.55 0.8</size></box></geometry>
+          <material><ambient>0.50 0.62 0.82 1</ambient><diffuse>0.50 0.62 0.82 1</diffuse></material></visual>
+      </link></model>
+    <model name="desk_c2"><static>true</static><pose>-6.5 7.5 0.4 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>1.1 0.55 0.8</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>1.1 0.55 0.8</size></box></geometry>
+          <material><ambient>0.50 0.62 0.82 1</ambient><diffuse>0.50 0.62 0.82 1</diffuse></material></visual>
+      </link></model>
+    <model name="desk_c3"><static>true</static><pose>-9.0 7.5 0.4 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>1.1 0.55 0.8</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>1.1 0.55 0.8</size></box></geometry>
+          <material><ambient>0.50 0.62 0.82 1</ambient><diffuse>0.50 0.62 0.82 1</diffuse></material></visual>
+      </link></model>
+    <model name="desk_c4"><static>true</static><pose>-5.5 2.5 0.4 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>1.1 0.55 0.8</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>1.1 0.55 0.8</size></box></geometry>
+          <material><ambient>0.50 0.62 0.82 1</ambient><diffuse>0.50 0.62 0.82 1</diffuse></material></visual>
+      </link></model>
+    <!-- BLUE beacon at nav goal (-1.4,1.0) -->
+    <model name="beacon_consultation"><static>true</static><pose>-1.4 1.0 0.7 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><cylinder><radius>0.20</radius><length>1.4</length></cylinder></geometry></collision>
+        <visual name="vis"><geometry><cylinder><radius>0.20</radius><length>1.4</length></cylinder></geometry>
+          <material><ambient>0.12 0.42 0.92 1</ambient><diffuse>0.12 0.42 0.92 1</diffuse></material></visual>
+      </link></model>
+
+    <!-- ===== SURGERY FURNITURE ===== -->
+    <!-- Operating tables -->
+    <model name="optable_1"><static>true</static><pose>-4.5 -6.0 0.5 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.65 1.85 1.0</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.65 1.85 1.0</size></box></geometry>
+          <material><ambient>0.86 0.92 0.88 1</ambient><diffuse>0.86 0.92 0.88 1</diffuse></material></visual>
+      </link></model>
+    <model name="optable_2"><static>true</static><pose>-7.0 -6.0 0.5 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.65 1.85 1.0</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.65 1.85 1.0</size></box></geometry>
+          <material><ambient>0.86 0.92 0.88 1</ambient><diffuse>0.86 0.92 0.88 1</diffuse></material></visual>
+      </link></model>
+    <model name="optable_3"><static>true</static><pose>-9.2 -6.0 0.5 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.65 1.85 1.0</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.65 1.85 1.0</size></box></geometry>
+          <material><ambient>0.86 0.92 0.88 1</ambient><diffuse>0.86 0.92 0.88 1</diffuse></material></visual>
+      </link></model>
+    <model name="trolley_s"><static>true</static><pose>-5.5 -8.5 0.4 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.45 0.45 0.8</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.45 0.45 0.8</size></box></geometry>
+          <material><ambient>0.72 0.82 0.76 1</ambient><diffuse>0.72 0.82 0.76 1</diffuse></material></visual>
+      </link></model>
+    <model name="desk_s"><static>true</static><pose>-5.5 -2.5 0.4 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>1.4 0.55 0.8</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>1.4 0.55 0.8</size></box></geometry>
+          <material><ambient>0.50 0.75 0.62 1</ambient><diffuse>0.50 0.75 0.62 1</diffuse></material></visual>
+      </link></model>
+    <!-- TEAL beacon at nav goal (-2.1,-1.5) -->
+    <model name="beacon_surgery"><static>true</static><pose>-2.1 -1.5 0.7 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><cylinder><radius>0.20</radius><length>1.4</length></cylinder></geometry></collision>
+        <visual name="vis"><geometry><cylinder><radius>0.20</radius><length>1.4</length></cylinder></geometry>
+          <material><ambient>0.08 0.80 0.46 1</ambient><diffuse>0.08 0.80 0.46 1</diffuse></material></visual>
+      </link></model>
+
+    <!-- ===== CORRIDOR GUIDE LINES ===== -->
+    <!-- Dashed center line on horizontal corridor -->
+    <model name="cline_h1"><static>true</static><pose>-7.0 0 0.015 0 0 0</pose>
+      <link name="link"><visual name="vis"><geometry><box><size>2.0 0.08 0.01</size></box></geometry>
+        <material><ambient>0.6 0.6 0.6 1</ambient><diffuse>0.6 0.6 0.6 1</diffuse></material></visual></link></model>
+    <model name="cline_h2"><static>true</static><pose>-3.5 0 0.015 0 0 0</pose>
+      <link name="link"><visual name="vis"><geometry><box><size>2.0 0.08 0.01</size></box></geometry>
+        <material><ambient>0.6 0.6 0.6 1</ambient><diffuse>0.6 0.6 0.6 1</diffuse></material></visual></link></model>
+    <model name="cline_h3"><static>true</static><pose>0.0 0 0.015 0 0 0</pose>
+      <link name="link"><visual name="vis"><geometry><box><size>2.0 0.08 0.01</size></box></geometry>
+        <material><ambient>0.6 0.6 0.6 1</ambient><diffuse>0.6 0.6 0.6 1</diffuse></material></visual></link></model>
+    <model name="cline_h4"><static>true</static><pose>3.5 0 0.015 0 0 0</pose>
+      <link name="link"><visual name="vis"><geometry><box><size>2.0 0.08 0.01</size></box></geometry>
+        <material><ambient>0.6 0.6 0.6 1</ambient><diffuse>0.6 0.6 0.6 1</diffuse></material></visual></link></model>
+    <model name="cline_h5"><static>true</static><pose>7.0 0 0.015 0 0 0</pose>
+      <link name="link"><visual name="vis"><geometry><box><size>2.0 0.08 0.01</size></box></geometry>
+        <material><ambient>0.6 0.6 0.6 1</ambient><diffuse>0.6 0.6 0.6 1</diffuse></material></visual></link></model>
+    <!-- Vertical corridor lines -->
+    <model name="cline_v1"><static>true</static><pose>0 -7.0 0.015 0 0 0</pose>
+      <link name="link"><visual name="vis"><geometry><box><size>0.08 2.0 0.01</size></box></geometry>
+        <material><ambient>0.6 0.6 0.6 1</ambient><diffuse>0.6 0.6 0.6 1</diffuse></material></visual></link></model>
+    <model name="cline_v2"><static>true</static><pose>0 -3.5 0.015 0 0 0</pose>
+      <link name="link"><visual name="vis"><geometry><box><size>0.08 2.0 0.01</size></box></geometry>
+        <material><ambient>0.6 0.6 0.6 1</ambient><diffuse>0.6 0.6 0.6 1</diffuse></material></visual></link></model>
+    <model name="cline_v3"><static>true</static><pose>0 3.5 0.015 0 0 0</pose>
+      <link name="link"><visual name="vis"><geometry><box><size>0.08 2.0 0.01</size></box></geometry>
+        <material><ambient>0.6 0.6 0.6 1</ambient><diffuse>0.6 0.6 0.6 1</diffuse></material></visual></link></model>
+    <model name="cline_v4"><static>true</static><pose>0 7.0 0.015 0 0 0</pose>
+      <link name="link"><visual name="vis"><geometry><box><size>0.08 2.0 0.01</size></box></geometry>
+        <material><ambient>0.6 0.6 0.6 1</ambient><diffuse>0.6 0.6 0.6 1</diffuse></material></visual></link></model>
+
+  </world>
+</sdf>
